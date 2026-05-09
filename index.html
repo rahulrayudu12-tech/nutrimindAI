@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriMind AI</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #10b981;
+        }
+        body { font-family: 'Inter', system-ui, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 2rem; display: flex; justify-content: center; min-height: 100vh; }
+        .container { background: var(--surface); padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 100%; max-width: 500px; border: 1px solid var(--border); }
+        h1 { margin-top: 0; font-size: 1.5rem; text-align: center; color: var(--primary); }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: var(--text-muted); }
+        input { width: 100%; box-sizing: border-box; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: none; background: var(--primary); color: white; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 1rem; }
+        button:hover { background: var(--primary-hover); }
+        button:disabled { opacity: 0.7; cursor: not-allowed; }
+        .result { margin-top: 1.5rem; display: none; background: var(--bg); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border); }
+        .result h3 { margin-top: 0; font-size: 1.1rem; color: var(--success); }
+        pre { white-space: pre-wrap; word-wrap: break-word; font-size: 0.875rem; color: var(--text-muted); margin: 0; }
+        .error { color: #ef4444; margin-top: 1rem; text-align: center; font-size: 0.875rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>NutriMind AI</h1>
+        <div class="form-group">
+            <label>What did you eat today?</label>
+            <input type="text" id="food" placeholder="e.g., 2 eggs, avocado toast">
+        </div>
+        <div class="form-group">
+            <label>Current Weight</label>
+            <input type="text" id="weight" placeholder="e.g., 180 lbs">
+        </div>
+        <div class="form-group">
+            <label>Goal</label>
+            <input type="text" id="goal" placeholder="e.g., Lose weight">
+        </div>
+        <div class="form-group">
+            <label>Allergies</label>
+            <input type="text" id="allergies" placeholder="e.g., Peanuts, Dairy">
+        </div>
+        <button id="btn" onclick="analyze()">Analyze</button>
+        <div id="error" class="error"></div>
+        <div id="result" class="result">
+            <h3>AI Analysis</h3>
+            <pre id="output"></pre>
+        </div>
+    </div>
+
+    <script>
+        async function analyze() {
+            const btn = document.getElementById('btn');
+            const resultDiv = document.getElementById('result');
+            const output = document.getElementById('output');
+            const errorDiv = document.getElementById('error');
+
+            const payload = {
+                food: document.getElementById('food').value || 'None',
+                weight: document.getElementById('weight').value || 'Unknown',
+                goal: document.getElementById('goal').value || 'Maintain health',
+                allergies: document.getElementById('allergies').value || 'None'
+            };
+
+            btn.disabled = true;
+            btn.innerText = 'Analyzing...';
+            errorDiv.innerText = '';
+            resultDiv.style.display = 'none';
+
+            try {
+                const res = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                
+                if (!res.ok) throw new Error(data.detail || 'API Error');
+
+                output.innerText = JSON.stringify(data, null, 2);
+                resultDiv.style.display = 'block';
+            } catch (err) {
+                errorDiv.innerText = err.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Analyze';
+            }
+        }
+    </script>
+</body>
+</html>
